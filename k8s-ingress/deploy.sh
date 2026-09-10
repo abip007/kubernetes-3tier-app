@@ -73,8 +73,51 @@ get_worker1_hostname() {
   fi
 }
 
+authorize_ssh_via_ssm() {
+  # A fresh cluster has no SSH trust from master to any worker (the EC2
+  # keypair's private key only ever lives on the operator's laptop). Push
+  # this node's own pubkey into the target's authorized_keys via SSM Run
+  # Command instead of requiring manual key copying or agent forwarding.
+  # Requires the node role to allow ssm:SendCommand / ssm:GetCommandInvocation.
+  local target_ip="$1" token region instance_id pubkey_file pubkey cmd_id params_file
+
+  pubkey_file="${HOME}/.ssh/id_ed25519.pub"
+  [[ -f "${pubkey_file}" ]] || ssh-keygen -t ed25519 -N "" -f "${pubkey_file%.pub}" -q
+  pubkey=$(cat "${pubkey_file}")
+
+  token=$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+  region=$(curl -sf -H "X-aws-ec2-metadata-token: ${token}" \
+    http://169.254.169.254/latest/meta-data/placement/region)
+
+  instance_id=$(aws ec2 describe-instances --region "${region}" \
+    --filters "Name=private-ip-address,Values=${target_ip}" "Name=instance-state-name,Values=running" \
+    --query 'Reservations[0].Instances[0].InstanceId' --output text)
+  [[ -z "${instance_id}" || "${instance_id}" == "None" ]] \
+    && { echo "   ❌ Could not resolve instance ID for ${target_ip}"; exit 1; }
+
+  params_file=$(mktemp)
+  cat > "${params_file}" <<EOF
+{"commands":["mkdir -p /home/ubuntu/.ssh && chmod 700 /home/ubuntu/.ssh && chown ubuntu:ubuntu /home/ubuntu/.ssh","grep -qxF '${pubkey}' /home/ubuntu/.ssh/authorized_keys 2>/dev/null || echo '${pubkey}' >> /home/ubuntu/.ssh/authorized_keys","chmod 600 /home/ubuntu/.ssh/authorized_keys && chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys"]}
+EOF
+
+  cmd_id=$(aws ssm send-command --region "${region}" \
+    --instance-ids "${instance_id}" --document-name "AWS-RunShellScript" \
+    --parameters "file://${params_file}" --query "Command.CommandId" --output text)
+  rm -f "${params_file}"
+  aws ssm wait command-executed --region "${region}" \
+    --command-id "${cmd_id}" --instance-id "${instance_id}" 2>/dev/null || true
+  echo "   ✅ SSH key authorized on ${target_ip} via SSM (command ${cmd_id})"
+}
+
 ensure_worker_storage() {
   echo "   Checking /data/postgres on worker-1 (${WORKER1_IP})..."
+  if ! ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o BatchMode=yes \
+       ubuntu@"${WORKER1_IP}" "true" 2>/dev/null; then
+    echo "   ⚙️  SSH not authorized yet — bootstrapping via SSM (first run on a fresh cluster)..."
+    authorize_ssh_via_ssm "${WORKER1_IP}"
+  fi
+
   if ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no \
        ubuntu@"${WORKER1_IP}" "test -d /data/postgres" 2>/dev/null; then
     echo "   ✅ /data/postgres already exists"
