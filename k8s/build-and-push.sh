@@ -21,9 +21,9 @@ set -euo pipefail
 # ──────────────────────────────────────────────
 # CONFIG — edit AWS_ACCOUNT_ID and AWS_REGION
 # ──────────────────────────────────────────────
-AWS_PROFILE="sarowar-ostad"
+AWS_PROFILE="abip007"
 export AWS_PROFILE
-AWS_ACCOUNT_ID="388779989543"
+AWS_ACCOUNT_ID="014882039467"
 AWS_REGION="ap-south-1"
 # ──────────────────────────────────────────────
 
