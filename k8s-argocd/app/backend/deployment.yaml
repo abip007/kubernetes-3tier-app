@@ -18,12 +18,12 @@ spec:
       containers:
         - name: bmi-backend
 <<<<<<< HEAD
-          image: 388779989543.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:0dcc627
+          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:47ae9a4
 =======
 <<<<<<< HEAD
-          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:5e065bc
+          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:47ae9a4
 =======
-          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:cf6bbcc
+          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-backend:47ae9a4
 >>>>>>> 6e258475060f35aad82300d63bd43e9769a5fb87
 >>>>>>> 54d4ace33b135d52b8efffa9830110c462e52727
           imagePullPolicy: Always
