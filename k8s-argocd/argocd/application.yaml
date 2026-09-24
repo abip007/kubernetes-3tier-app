@@ -10,7 +10,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/sarowar-alam/kubernetes-3tier-app
+    repoURL: https://github.com/abip007/kubernetes-3tier-app.git
     targetRevision: main
     # ArgoCD watches ONLY this path — all app manifests live here
     path: k8s-argocd/app
