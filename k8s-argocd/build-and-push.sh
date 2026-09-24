@@ -22,9 +22,9 @@ set -euo pipefail
 # ──────────────────────────────────────────────
 # CONFIG
 # ──────────────────────────────────────────────
-AWS_PROFILE="sarowar-ostad"
+AWS_PROFILE="abip007"  # AWS CLI profile to use for ECR login
 export AWS_PROFILE
-AWS_ACCOUNT_ID="388779989543"
+AWS_ACCOUNT_ID="014882039467"
 AWS_REGION="ap-south-1"
 # ──────────────────────────────────────────────
 
