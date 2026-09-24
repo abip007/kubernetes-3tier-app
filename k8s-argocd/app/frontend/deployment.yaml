@@ -18,7 +18,7 @@ spec:
       containers:
         - name: bmi-frontend
 
-          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-frontend:latest
+          image: 014882039467.dkr.ecr.ap-south-1.amazonaws.com/bmi-frontend:e2d6e7e
 
           imagePullPolicy: Always
           ports:
